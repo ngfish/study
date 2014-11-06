@@ -1,0 +1,94 @@
+// 価格帯分析.cpp 
+#include "stdafx.h"
+#include "class.h"
+
+//csvデータ読み込み
+void READCSV(const char *filename, vector<vector<string>> &values){
+	ifstream csvFile(filename);
+	string str;
+	stringstream ss;
+	//vector<vector<string>> values;
+	int p;
+
+	//失敗時の処理
+	if (csvFile.fail()){
+		cerr << "Oh…failed.\n I couldn't open file." << endl;
+		exit(0);
+	}
+	while (getline(csvFile, str)){
+		vector<string> inner;
+		string tmp;
+
+		while ((p = str.find(",")) != str.npos){
+			ss << str.substr(0, p);
+			ss >> tmp;
+			inner.push_back(tmp);
+			str = str.substr(p + 1);
+			ss.str("");
+			ss.clear(stringstream::goodbit);
+		}
+
+		ss << str;
+		ss >> tmp;
+		ss.str(""); // バッファをクリアする。
+		ss.clear(stringstream::goodbit);
+
+		inner.push_back(tmp);
+		values.push_back(inner);
+	}
+	
+	for (unsigned int i = 0; i < values.size(); i++){
+	for (unsigned int j = 0; j < values[i].size(); j++){
+	cout << values[i][j] << ",";
+	}
+	cout << endl;
+	}
+}
+
+//文字列⇒数字への変換
+int Change(const string &str){
+	char *e = nullptr;
+	int num = (int)(strtol(str.c_str(), &e, 10));
+	return num;
+}
+
+int main(int argc, char *argv[]){
+	char filename[256];
+	vector<vector<string>> values;
+
+	//端末データ読み込み
+	strcpy_s(filename, sizeof(filename), "C:\\Users\\1004196\\Documents\\Visual Studio 2013\\Projects\\セラップ釣銭データ作成\\DATA\\input2\\端末リスト.csv");
+	READCSV(filename, values);
+
+	Data * rows = new Data[values.size()];
+	for (unsigned int i = 0; i < values.size(); ++i){
+		rows[i].Setchain(Change(values[i][0]));
+		rows[i].Setstore(Change(values[i][1]));
+		rows[i].Setmachine(Change(values[i][3]));
+		rows[i].Setstorename(values[i][2]);
+	}
+	unsigned int num_store = values.size();
+	values.clear();
+	values.shrink_to_fit();
+
+	vector<vector<int>> values;
+
+	for (unsigned int i = 0; i < num_store; i++){
+		for (unsigned int j = 1; j < rows[i].m_machine; j++){
+			int year = YEARS, month = MONTHS, day = DAYS;
+
+			do{
+				//JLDATAの読み込み
+				sprintf_s(filename, sizeof(filename), "C:\\Users\\1004196\\Desktop\\山岡11月分析\\山岡%s\\JLDATA_%02d%02d%02d_%04d4%01d_%06d.csv", rows[i].m_storename.c_str(), year, month, day, rows[i].m_store, j, rows[i].m_chain);
+				READCSV(filename, values);
+			
+
+			} while (TimeRoop(&year, &month, &day));
+
+		}
+	}
+	delete[]rows;
+
+	getchar();
+	return 0;
+}
